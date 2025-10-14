@@ -17,7 +17,9 @@ Este proyecto es un **dashboard interactivo** desarrollado con **Angular** y **n
 
 # Clonar y instalar
 git clone [tu-repo]
+////
 cd dashboard-os
+////
 npm install
 
 # Ejecutar
