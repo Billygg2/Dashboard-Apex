@@ -1,0 +1,35 @@
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background-color: #002b80;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+td {
+  text-align: center;
+  padding: 6px;
+  border: 1px solid #ddd;
+}
+
+.empty-msg {
+  margin-top: 10px;
+  font-style: italic;
+}

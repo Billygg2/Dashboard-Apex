@@ -1,0 +1,27 @@
+<h2>Análisis de Créditos por País</h2>
+
+<label for="excelInput"><b>Cargar datos desde Excel:</b></label>
+<input
+  type="file"
+  id="excelInput"
+  (change)="onFileChange($event)"
+  accept=".xls,.xlsx"
+/>
+
+<p *ngIf="!data.length" class="empty-msg">Carga un archivo Excel para comenzar</p>
+
+<div *ngIf="data.length" class="table-container">
+  <h3>Vista previa de datos ({{ fileName }})</h3>
+  <table>
+    <thead>
+      <tr>
+        <th *ngFor="let header of data[0]">{{ header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of data.slice(1)">
+        <td *ngFor="let cell of row">{{ cell }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,395 @@
+<div class="dashboard-wrap">
+  <!-- Sidebar (fijo e informativo) -->
+  <aside class="sidebar" role="complementary" aria-label="Sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <div class="logo">📊</div>
+        <div class="title">Dashboard Créditos</div>
+      </div>
+
+      <div class="sidebar-info" *ngIf="countries.length">
+        <h4>📋 Información general</h4>
+        <div class="info-list">
+          <div class="info-item">
+            <strong>Países:</strong>
+            <span class="info-value">{{ countries.length }}</span>
+          </div>
+          <div class="info-item">
+            <strong>Años:</strong>
+            <span class="info-value">{{ availableYears.length }}</span>
+          </div>
+          <div class="info-item">
+            <strong>Registros:</strong>
+            <span class="info-value">{{ excelData.length }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <small>Desarrollado por <strong>Billy Salmerón 🐾</strong></small>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main class="main" role="main">
+    <div class="content-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>📈 Análisis de Créditos por País</h1>
+          <p class="muted" *ngIf="!excelData.length">Carga un archivo Excel para comenzar</p>
+          <p class="success" *ngIf="excelData.length && countries.length">
+            ✅ {{ excelData.length }} países • {{ availableYears.length }} años
+          </p>
+        </div>
+      </header>
+
+      <!-- Upload -->
+      <section class="upload-section card">
+        <div class="section-header">
+          <span class="icon">📁</span>
+          <h3>Cargar archivo Excel</h3>
+        </div>
+        <app-excel (dataLoaded)="onDataLoaded($event)"></app-excel>
+      </section>
+
+      <!-- Modo de visualización -->
+      <section class="mode-section card" *ngIf="countries.length">
+        <div class="section-header">
+          <span class="icon">🔍</span>
+          <h3>Modo de Visualización</h3>
+        </div>
+        <div class="mode-buttons">
+          <button class="mode-btn" [class.active]="comparisonMode === 'single'"
+            (click)="comparisonMode = 'single'; updateAll()">
+            📊 Vista Individual
+          </button>
+          <button class="mode-btn" [class.active]="comparisonMode === 'compareCountries'"
+            (click)="comparisonMode = 'compareCountries'; updateAll()">
+            ⚖️ Comparar Países
+          </button>
+          <button class="mode-btn" [class.active]="comparisonMode === 'compareYears'"
+            (click)="comparisonMode = 'compareYears'; updateAll()">
+            📅 Comparar Años
+          </button>
+        </div>
+      </section>
+
+      <!-- Vista Individual -->
+      <section *ngIf="comparisonMode === 'single' && excelData.length && countries.length">
+        <!-- Filtros -->
+        <!-- En Vista Individual, solo mostrar filtro de país -->
+        <section class="filters card">
+          <div class="section-header">
+            <span class="icon">🎯</span>
+            <h3>Filtros</h3>
+          </div>
+          <div class="filter-row">
+            <div class="filter-item">
+              <label class="filter-label">País:</label>
+              <select class="filter-select" [(ngModel)]="selectedCountry" (change)="changeCountry(selectedCountry)">
+                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Estadísticas -->
+        <div class="stats card">
+          <div class="section-header">
+            <span class="icon">📊</span>
+            <h3>Estadísticas - {{ selectedCountry || '—' }}</h3>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Máximo:</span>
+              <strong class="stat-value">{{ stats.max }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Mínimo:</span>
+              <strong class="stat-value">{{ stats.min }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Suma:</span>
+              <strong class="stat-value">{{ stats.sum }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Promedio:</span>
+              <strong class="stat-value">{{ stats.mean }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Moda:</span>
+              <strong class="stat-value">{{ stats.mode }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Varianza:</span>
+              <strong class="stat-value">{{ stats.variance }}</strong>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Desviación:</span>
+              <strong class="stat-value">{{ stats.stdDev }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-primary">
+          <div class="chart-container card">
+            <div class="chart-header">
+              <span class="icon">📈</span>
+              <h4 class="chart-title">Gráfico de Dispersión - {{ selectedCountry }}</h4>
+            </div>
+            <div class="chart-inner">
+              <apx-chart [series]="scatterChartOptions.series" [chart]="scatterChartOptions.chart"
+                [xaxis]="scatterChartOptions.xaxis" [yaxis]="scatterChartOptions.yaxis"
+                [dataLabels]="scatterChartOptions.dataLabels" [markers]="scatterChartOptions.markers"
+                [title]="scatterChartOptions.title">
+              </apx-chart>
+            </div>
+          </div>
+
+          <div class="chart-container card">
+            <div class="chart-header">
+              <span class="icon">📉</span>
+              <h4 class="chart-title">Histograma - {{ selectedCountry }}</h4>
+            </div>
+            <div class="chart-inner">
+              <apx-chart [series]="histChartOptions.series" [chart]="histChartOptions.chart"
+                [xaxis]="histChartOptions.xaxis" [yaxis]="histChartOptions.yaxis"
+                [dataLabels]="histChartOptions.dataLabels" [fill]="histChartOptions.fill"
+                [title]="histChartOptions.title">
+              </apx-chart>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparación entre países -->
+      <section class="comparison-section" *ngIf="comparisonMode === 'compareCountries' && countries.length">
+        <div class="comparison-filters card">
+          <div class="section-header">
+            <span class="icon">⚖️</span>
+            <h3>Comparación entre Países</h3>
+          </div>
+
+          <div class="comparison-filters-row">
+            <div class="comparison-item">
+              <label class="filter-label">País 1:</label>
+              <select class="filter-select" [(ngModel)]="selectedCountry1" (change)="compareCountries()">
+                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+              </select>
+            </div>
+
+            <div class="comparison-item">
+              <label class="filter-label">País 2:</label>
+              <select class="filter-select" [(ngModel)]="selectedCountry2" (change)="compareCountries()">
+                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estadísticas comparativas -->
+        <div class="comparison-stats" *ngIf="comparisonStats.country1">
+          <div class="stats-comparison">
+            <div class="country-stats card">
+              <h4>{{ comparisonStats.country1.name }}</h4>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Máximo:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.max }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Mínimo:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.min }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Suma:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.sum }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Promedio:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.mean }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Moda:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.mode }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Varianza:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.variance }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Desviación:</span>
+                  <strong class="stat-value">{{ comparisonStats.country1.stdDev }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="country-stats card">
+              <h4>{{ comparisonStats.country2.name }}</h4>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Máximo:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.max }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Mínimo:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.min }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Suma:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.sum }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Promedio:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.mean }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Moda:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.mode }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Varianza:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.variance }}</strong>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Desviación:</span>
+                  <strong class="stat-value">{{ comparisonStats.country2.stdDev }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico comparativo -->
+          <div class="chart-container card">
+            <div class="chart-header">
+              <span class="icon">📈</span>
+              <h4 class="chart-title">Comparación de Tendencias - {{ selectedCountry1 }} vs {{ selectedCountry2 }}</h4>
+            </div>
+            <div class="chart-inner">
+              <apx-chart [series]="comparisonChartOptions.series" [chart]="comparisonChartOptions.chart"
+                [xaxis]="comparisonChartOptions.xaxis" [yaxis]="comparisonChartOptions.yaxis"
+                [dataLabels]="comparisonChartOptions.dataLabels" [markers]="comparisonChartOptions.markers"
+                [fill]="comparisonChartOptions.fill" [title]="comparisonChartOptions.title">
+              </apx-chart>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay datos para comparar -->
+        <div class="no-comparison card" *ngIf="!comparisonStats.country1">
+          <div class="no-data-message">
+            <span class="icon">ℹ️</span>
+            <h4>Selecciona dos países para comparar</h4>
+            <p>Elige dos países diferentes de la lista para ver su comparación</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparación entre años -->
+      <section class="comparison-section" *ngIf="comparisonMode === 'compareYears' && countries.length">
+        <div class="comparison-filters card">
+          <div class="section-header">
+            <span class="icon">📅</span>
+            <h3>Comparación entre Años</h3>
+          </div>
+
+          <div class="comparison-filters-row-3">
+            <div class="comparison-item">
+              <label class="filter-label">País:</label>
+              <select class="filter-select" [(ngModel)]="selectedCountry" (change)="compareYears()">
+                <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+              </select>
+            </div>
+
+            <div class="comparison-item">
+              <label class="filter-label">Año 1:</label>
+              <select class="filter-select" [(ngModel)]="selectedYear1" (change)="compareYears()">
+                <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+              </select>
+            </div>
+
+            <div class="comparison-item">
+              <label class="filter-label">Año 2:</label>
+              <select class="filter-select" [(ngModel)]="selectedYear2" (change)="compareYears()">
+                <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estadísticas comparativas por año -->
+        <div class="comparison-stats" *ngIf="yearComparisonStats.year1">
+          <div class="stats-comparison">
+            <div class="year-stats card">
+              <h4>Año {{ selectedYear1 }}</h4>
+              <div class="year-stat-item">
+                <span class="stat-label">Créditos:</span>
+                <strong class="stat-value">{{ yearComparisonStats.year1.credits | number }}</strong>
+              </div>
+              <div class="year-stat-item">
+                <span class="stat-label">Diferencia:</span>
+                <strong class="stat-value" [class.positive]="yearComparisonStats.difference > 0"
+                  [class.negative]="yearComparisonStats.difference < 0">
+                  {{ yearComparisonStats.difference > 0 ? '+' : '' }}{{ yearComparisonStats.difference | number }}
+                  ({{ yearComparisonStats.percentageDifference > 0 ? '+' : '' }}{{
+                  yearComparisonStats.percentageDifference }}%)
+                </strong>
+              </div>
+            </div>
+
+            <div class="year-stats card">
+              <h4>Año {{ selectedYear2 }}</h4>
+              <div class="year-stat-item">
+                <span class="stat-label">Créditos:</span>
+                <strong class="stat-value">{{ yearComparisonStats.year2.credits | number }}</strong>
+              </div>
+              <div class="year-stat-item">
+                <span class="stat-label">Tendencia:</span>
+                <strong class="stat-value" [class.positive]="yearComparisonStats.difference > 0"
+                  [class.negative]="yearComparisonStats.difference < 0">
+                  {{ yearComparisonStats.difference > 0 ? '📈 Aumento' : '📉 Disminución' }}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico comparativo de años -->
+          <div class="chart-container card">
+            <div class="chart-header">
+              <span class="icon">📊</span>
+              <h4 class="chart-title">Comparación de Años - {{ selectedYear1 }} vs {{ selectedYear2 }}</h4>
+            </div>
+            <div class="chart-inner">
+              <apx-chart [series]="yearComparisonChartOptions.series" [chart]="yearComparisonChartOptions.chart"
+                [xaxis]="yearComparisonChartOptions.xaxis" [yaxis]="yearComparisonChartOptions.yaxis"
+                [dataLabels]="yearComparisonChartOptions.dataLabels" [title]="yearComparisonChartOptions.title">
+              </apx-chart>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje cuando no hay datos para comparar años -->
+        <div class="no-comparison card" *ngIf="!yearComparisonStats.year1">
+          <div class="no-data-message">
+            <span class="icon">ℹ️</span>
+            <h4>Selecciona un país y dos años para comparar</h4>
+            <p>Elige un país y dos años diferentes para ver la comparación entre años</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mensaje cuando no hay datos cargados -->
+      <section class="no-data-section" *ngIf="!excelData.length">
+        <div class="no-data-card card">
+          <div class="no-data-content">
+            <span class="no-data-icon">📊</span>
+            <h3>Esperando datos</h3>
+            <p>Carga un archivo Excel con los datos de créditos por país y año para comenzar el análisis.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
